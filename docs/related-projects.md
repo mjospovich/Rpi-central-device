@@ -25,3 +25,5 @@ You can run **central** (this repo) on one machine and **multiple** edge project
 - [**Gateway setup (Laird)**](gateway-setup-laird-rg1xx.md) — example commercial gateway aimed at this stack  
 
 For **codec** and **payload layout** for Rpi-edge-alert, follow their **CHIRPSTACK** / **lora** documentation; for **LorBeePlugin**, follow that repo’s ChirpStack / device configuration docs.
+
+**Upstream attribution:** [References & upstream](references.md) (ChirpStack, Mosquitto, Telegraf, Decentlab, …).

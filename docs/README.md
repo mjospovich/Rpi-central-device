@@ -21,7 +21,8 @@ All docs for **Rpi-central-device**: LoRaWAN network server (ChirpStack), MQTT (
 Operational / hardware-specific guides:
 
 8. [Gateway setup (Laird RG1xx)](gateway-setup-laird-rg1xx.md) — Semtech forwarder → UDP 1700  
-9. [Sensor payload byte budget](sensor-payload-byte-budget.md) — *optional* deep dive on compact binary payloads (useful when designing codecs)
+9. [Sensor payload byte budget](sensor-payload-byte-budget.md) — *optional* deep dive on compact binary payloads (useful when designing codecs)  
+10. [References & upstream](references.md) — credit and links for ChirpStack, Mosquitto, Telegraf, etc.
 
 ---
 
@@ -36,6 +37,7 @@ Operational / hardware-specific guides:
 | [InfluxDB Cloud](influxdb.md) | `INFLUX_*` variables, Cloud-only (no local Influx container) |
 | [LoRa dashboard](lora-dashboard.md) | Flask UI on **:3000** — MQTT uplinks, LorBee / DL-IAM downlinks |
 | [Grafana](grafana.md) | Flux data source against the same Cloud org |
+| [References & upstream](references.md) | Links to ChirpStack, Eclipse, InfluxData, Decentlab, … |
 
 ---
 
@@ -48,6 +50,7 @@ Operational / hardware-specific guides:
 | [Gateway setup (Laird RG1xx)](gateway-setup-laird-rg1xx.md) | Example gateway configuration |
 | [Sensor payload byte budget](sensor-payload-byte-budget.md) | Byte-level payload planning (LoRa-oriented) |
 | [Related projects](related-projects.md) | **LorBeePlugin**, **Rpi-edge-alert**, and how they talk to this central device |
+| [References & upstream](references.md) | ChirpStack, Mosquitto, Telegraf, InfluxDB, Decentlab, Grafana — links and roles |
 
 ---
 

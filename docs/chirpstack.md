@@ -127,6 +127,7 @@ The `object` field contains the decoded payload when a codec is configured on th
 ## See also
 
 - [Related projects](related-projects.md) — edge devices (**LorBeePlugin**, **Rpi-edge-alert**) that join this ChirpStack  
+- [References & upstream](references.md) — official ChirpStack / Mosquitto / Telegraf links  
 - [LoRa dashboard](lora-dashboard.md) — live uplinks + LorBee / DL-IAM downlink UI  
 - [LoRa pipeline explained](lora-pipeline-explained.md)  
 - [Gateway setup (Laird RG1xx)](gateway-setup-laird-rg1xx.md)

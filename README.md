@@ -78,6 +78,7 @@ Full index, reading order, and diagrams: **[`docs/README.md`](docs/README.md)**
 | [docs/grafana.md](docs/grafana.md) | Optional dashboards |
 | [docs/gateway-setup-laird-rg1xx.md](docs/gateway-setup-laird-rg1xx.md) | Example Laird gateway |
 | [docs/sensor-payload-byte-budget.md](docs/sensor-payload-byte-budget.md) | Optional LoRa payload byte planning |
+| [docs/references.md](docs/references.md) | Upstream projects (ChirpStack, Mosquitto, Telegraf, …) |
 
 ---
 
@@ -103,6 +104,12 @@ Default gateway bridge topics use **EU868** (`chirpstack-gateway-bridge/chirpsta
 - Rotate ChirpStack **API secret** (`chirpstack/chirpstack.toml`) before exposing 8081/8090 beyond the LAN.
 - **`CHIRPSTACK_API_TOKEN`** (LoRa dashboard) is a separate ChirpStack API key — minimal scope, keep it out of git.
 - Never commit **`.env`** or **`nodered/data/flows_cred.json`**.
+
+---
+
+## References and upstream software
+
+ChirpStack, Mosquitto, Node-RED, Telegraf, InfluxDB, Decentlab decoders, and other upstreams are credited with links in **[`docs/references.md`](docs/references.md)**. This repo is integration and configuration on top of those projects—see their licenses and terms in the respective sources.
 
 ---
 
