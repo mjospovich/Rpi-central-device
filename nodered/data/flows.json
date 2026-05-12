@@ -1,0 +1,91 @@
+[
+    {
+        "id": "tab_lorawan",
+        "type": "tab",
+        "label": "LoRaWAN → Influx",
+        "disabled": false,
+        "info": "ChirpStack application uplinks → Telegraf-friendly MQTT. Edit measurement rules in the function node if your device naming differs from DL-IAM / lora-radio patterns."
+    },
+    {
+        "id": "mqtt_broker_1",
+        "type": "mqtt-broker",
+        "name": "Mosquitto",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "nodered",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true
+    },
+    {
+        "id": "mqtt_in_chirpstack",
+        "type": "mqtt in",
+        "z": "tab_lorawan",
+        "name": "ChirpStack uplinks",
+        "topic": "application/+/device/+/event/up",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "mqtt_broker_1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 140,
+        "y": 200,
+        "wires": [
+            [
+                "func_chirpstack_extract"
+            ]
+        ]
+    },
+    {
+        "id": "func_chirpstack_extract",
+        "type": "function",
+        "z": "tab_lorawan",
+        "name": "Normalize ChirpStack object",
+        "func": "var src = msg.payload || {};\nvar obj = src.object;\nvar di = src.deviceInfo || {};\nif (!obj || typeof obj !== 'object') return null;\n\nvar deviceName = di.deviceName || '';\nvar profileName = di.deviceProfileName || '';\nvar devEui = (di.devEui || '').toLowerCase();\n\nvar measurement = 'lorawan_misc';\nif (/^dl[_-]?iam/i.test(deviceName) || /dl[_-]?iam/i.test(profileName)) {\n    var d = deviceName.match(/dl[_-]?iam[_-]?(\\d+)/i);\n    measurement = d ? ('dl_iam_' + d[1]) : 'dl_iam_unknown';\n} else {\n    var m = deviceName.match(/lora[_-]?radio[_-]?(\\d+)/i);\n    if (m && m[1]) {\n        measurement = 'zigbee_network_' + m[1];\n    } else if (/lora[_-]?radio/i.test(deviceName) || /lora[_-]?radio/i.test(profileName)) {\n        measurement = 'zigbee_network_edge';\n    }\n}\n\nvar round2 = function(v) {\n    return (typeof v === 'number' && v % 1 !== 0) ? Math.round(v * 100) / 100 : v;\n};\n\nvar baseTime = src.time ? new Date(src.time) : new Date();\nif (isNaN(baseTime.getTime())) baseTime = new Date();\nvar shifted = new Date(baseTime.getTime() + (2 * 60 * 60 * 1000));\nvar timeGmt2 = shifted.toISOString().replace(/\\.\\d{3}Z$/, 'Z');\n\nfunction isExcludedField(k) {\n    return k === 'entry_id' || k === 'entryId' || k === 'entry-id' || k === 'protocol_version' || k === 'device_id';\n}\n\nfunction normalizeValue(v) {\n    if (v === null || v === undefined) return undefined;\n    if (typeof v === 'number') return round2(v);\n    if (typeof v === 'boolean') return v ? 1 : 0;\n    if (typeof v === 'string') return v;\n    return JSON.stringify(v);\n}\n\nfunction applyAlarmIndicators(out, sensorObj) {\n    var list = Array.isArray(sensorObj.alarm_fields) ? sensorObj.alarm_fields : [];\n    var active = {};\n    for (var i = 0; i < list.length; i++) {\n        if (typeof list[i] === 'string' && list[i]) active[list[i]] = true;\n    }\n    out.alarm = list.length > 0 ? 1 : 0;\n    out.alarm_count = list.length;\n    out.alarm_fields = list.filter(function(v) { return typeof v === 'string' && v; }).join(',');\n    var skipAlarmScalar = { entry_id: true, entryId: true, 'entry-id': true, sensor_type: true, alarm_fields: true, protocol_version: true, device_id: true };\n    for (var ak in sensorObj) {\n        if (!Object.prototype.hasOwnProperty.call(sensorObj, ak)) continue;\n        if (skipAlarmScalar[ak] || isExcludedField(ak)) continue;\n        var av = sensorObj[ak];\n        if (av === null || av === undefined) continue;\n        if (typeof av === 'object') continue;\n        var safeKey = String(ak).replace(/[^a-zA-Z0-9_]/g, '_');\n        if (!safeKey) continue;\n        out['alarm_' + safeKey] = active[ak] ? 1 : 0;\n    }\n}\n\nfunction buildPoint(sensorName, sensorObj) {\n    if (!sensorObj || typeof sensorObj !== 'object' || Array.isArray(sensorObj)) return null;\n\n    var out = {\n        dev_eui: devEui,\n        device_name: deviceName || devEui,\n        sensor_name: deviceName || devEui,\n        measurement: measurement,\n        time_gmt2: timeGmt2\n    };\n\n    for (var k in sensorObj) {\n        if (!Object.prototype.hasOwnProperty.call(sensorObj, k)) continue;\n        if (isExcludedField(k)) continue;\n        var val = normalizeValue(sensorObj[k]);\n        if (val !== undefined) out[k] = val;\n    }\n\n    applyAlarmIndicators(out, sensorObj);\n\n    return {\n        topic: 'nodered/lorawan/' + measurement,\n        payload: out\n    };\n}\n\nvar messages = [];\nvar keys = Object.keys(obj);\nvar hasNestedSensors = keys.some(function(k) {\n    return obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k]);\n});\n\nif (hasNestedSensors) {\n    keys.forEach(function(sensorKey) {\n        var point = buildPoint(sensorKey, obj[sensorKey]);\n        if (point) messages.push(point);\n    });\n} else {\n    var single = buildPoint('uplink_object', obj);\n    if (single) messages.push(single);\n}\n\nif (messages.length === 0) return null;\nvar edgeDupes = [];\nfor (var mi = 0; mi < messages.length; mi++) {\n    var p = messages[mi].payload;\n    var mst = p.measurement;\n    if (typeof mst === 'string' && mst.indexOf('zigbee_network_') === 0) {\n        var ep = {};\n        for (var ek in p) {\n            if (Object.prototype.hasOwnProperty.call(p, ek)) ep[ek] = p[ek];\n        }\n        ep.measurement = 'lora_rpi_edge';\n        ep.original_measurement = mst;\n        edgeDupes.push({ topic: 'nodered/lorawan_edge', payload: ep });\n    }\n}\nnode.send([messages.concat(edgeDupes)]);\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 200,
+        "wires": [
+            [
+                "mqtt_out_lorawan"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt_out_lorawan",
+        "type": "mqtt out",
+        "z": "tab_lorawan",
+        "name": "nodered/lorawan/<measurement>",
+        "topic": "",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "mqtt_broker_1",
+        "x": 680,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "comment_lorawan",
+        "type": "comment",
+        "z": "tab_lorawan",
+        "name": "Output: dynamic topic from each message. Optional duplicate lora_rpi_edge on nodered/lorawan_edge for zigbee_network_* style names.",
+        "info": "",
+        "x": 400,
+        "y": 140,
+        "wires": []
+    }
+]

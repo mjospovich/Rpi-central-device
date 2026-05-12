@@ -1,0 +1,105 @@
+# LoRaWAN edge stack: ChirpStack + Mosquitto + Node-RED + Telegraf
+# Telegraf writes to InfluxDB Cloud (see .env). Host-network services share localhost:1883.
+
+services:
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:latest
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/config:/mosquitto/config
+
+  nodered:
+    container_name: nodered
+    image: nodered/node-red:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TZ=Europe/Zagreb
+    volumes:
+      - ./nodered/data:/data
+    depends_on:
+      - mosquitto
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf:1.29
+    restart: unless-stopped
+    network_mode: host
+    env_file: .env
+    environment:
+      - TZ=Europe/Zagreb
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - mosquitto
+      - nodered
+
+  chirpstack-postgres:
+    container_name: chirpstack-postgres
+    image: postgres:14-alpine
+    restart: unless-stopped
+    volumes:
+      - ./chirpstack-postgresql/initdb:/docker-entrypoint-initdb.d:ro
+      - chirpstack_postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=chirpstack
+      - POSTGRES_PASSWORD=chirpstack
+      - POSTGRES_DB=chirpstack
+
+  chirpstack-redis:
+    container_name: chirpstack-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --save 300 1 --save 60 100 --appendonly no
+    volumes:
+      - chirpstack_redis_data:/data
+
+  chirpstack:
+    container_name: chirpstack
+    image: chirpstack/chirpstack:4
+    restart: unless-stopped
+    command: -c /etc/chirpstack
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./chirpstack:/etc/chirpstack:ro
+    environment:
+      - POSTGRESQL_HOST=chirpstack-postgres
+      - REDIS_HOST=chirpstack-redis
+      - MQTT_BROKER_HOST=host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - chirpstack-postgres
+      - chirpstack-redis
+
+  chirpstack-gateway-bridge:
+    container_name: chirpstack-gateway-bridge
+    image: chirpstack/chirpstack-gateway-bridge:4
+    restart: unless-stopped
+    ports:
+      - "1700:1700/udp"
+    volumes:
+      - ./chirpstack-gateway-bridge:/etc/chirpstack-gateway-bridge:ro
+    command: -c /etc/chirpstack-gateway-bridge/chirpstack-gateway-bridge.toml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - chirpstack
+
+  chirpstack-rest-api:
+    container_name: chirpstack-rest-api
+    image: chirpstack/chirpstack-rest-api:4
+    restart: unless-stopped
+    command: --server chirpstack:8081 --bind 0.0.0.0:8090 --insecure
+    ports:
+      - "8090:8090"
+    depends_on:
+      - chirpstack
+
+volumes:
+  chirpstack_postgres_data:
+  chirpstack_redis_data:

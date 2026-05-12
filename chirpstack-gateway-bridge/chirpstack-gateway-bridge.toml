@@ -1,0 +1,24 @@
+# See https://www.chirpstack.io/gateway-bridge/install/config/ for a full
+# configuration example and documentation.
+#
+# Uses the host's Mosquitto broker (same as Node-RED and Telegraf).
+# host.docker.internal resolves to host via extra_hosts in docker-compose.
+
+[integration.mqtt.auth.generic]
+servers=["tcp://host.docker.internal:1883"]
+username=""
+password=""
+
+# Semtech UDP packet-forwarder (default). Gateways send to UDP 1700 (EU868).
+[backend]
+type="semtech_udp"
+
+  [backend.semtech_udp]
+  udp_bind="0.0.0.0:1700"
+
+# EU868 topic prefix for gateway bridge <-> ChirpStack communication
+[integration.mqtt]
+marshaler="json"
+event_topic_template="eu868/gateway/{{ .GatewayID }}/event/{{ .EventType }}"
+state_topic_template="eu868/gateway/{{ .GatewayID }}/state/{{ .StateType }}"
+command_topic_template="eu868/gateway/{{ .GatewayID }}/command/#"
