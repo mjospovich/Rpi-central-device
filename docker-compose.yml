@@ -37,6 +37,29 @@ services:
       - mosquitto
       - nodered
 
+  lora-dashboard:
+    container_name: lora-dashboard
+    build: ./lora-dashboard
+    image: rpi-central-device-lora-dashboard:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TZ=Europe/Zagreb
+      - MQTT_BROKER=localhost
+      - MQTT_PORT=1883
+      - CHIRPSTACK_API_URL=http://localhost:8090
+      - CHIRPSTACK_API_TOKEN=${CHIRPSTACK_API_TOKEN}
+      - DASHBOARD_PORT=3000
+      - DECENTLAB_DEVICE_NAME_SUBSTRINGS=DL-IAM,decentlab
+      - DEVICE_DOWNLINK_OVERRIDES_FILE=/data/device_downlink_overrides.json
+      - DL_IAM_FPORT=1
+      - EXCLUDED_DEVEUIS=
+    volumes:
+      - lora_dashboard_data:/data
+    depends_on:
+      - mosquitto
+      - chirpstack-rest-api
+
   chirpstack-postgres:
     container_name: chirpstack-postgres
     image: postgres:14-alpine
@@ -103,3 +126,4 @@ services:
 volumes:
   chirpstack_postgres_data:
   chirpstack_redis_data:
+  lora_dashboard_data:

@@ -1,8 +1,7 @@
-# RPi Central Device
+# Rpi-central-device
 
-LoRaWAN **network server** and **metrics pipeline** on a Raspberry Pi (or Linux host): **ChirpStack**, **Mosquitto**, **Node-RED**, and **Telegraf** writing to **InfluxDB Cloud**. Decoded device uplinks land in MQTT, get normalized for time series, and can feed **Grafana** or other tools on top of Cloud.
+LoRaWAN **network server** and **metrics pipeline** on a Raspberry Pi (or Linux host): **ChirpStack**, **Mosquitto**, **Node-RED**, **Telegraf** → **InfluxDB Cloud**, and an optional **LoRa dashboard** (live uplinks + downlinks). Decoded uplinks are also normalized for time series and can feed **Grafana** on top of Cloud.
 
-Repository and default clone folder name: **`Rpi-central-device`**.
 
 This repo is the **central** side of a split design: field / edge stacks (Zigbee + LoRa device, or air-quality + LoRa uplinks) live in companion repositories and **join through your gateway** to ChirpStack here.
 
@@ -32,6 +31,7 @@ How they fit together: **[`docs/related-projects.md`](docs/related-projects.md)*
 | PostgreSQL / Redis | ChirpStack backing stores | (internal) |
 | Node-RED | `application/.../event/up` → Telegraf-friendly JSON | 1880 |
 | Telegraf | MQTT → **InfluxDB Cloud** (`influxdb_v2`) | — |
+| LoRa dashboard | Live MQTT feed + LorBee / DL-IAM downlinks via ChirpStack REST | 3000 |
 
 There is **no** InfluxDB container; the edge host only needs outbound HTTPS to your Cloud region.
 
@@ -39,12 +39,13 @@ There is **no** InfluxDB container; the edge host only needs outbound HTTPS to y
 
 ## Quick start
 
-1. Clone the repo and create **`.env`** from **`.env.example`** (InfluxDB Cloud URL, token, org, bucket).
+1. Clone the repo and create **`.env`** from **`.env.example`** (InfluxDB Cloud + **`CHIRPSTACK_API_TOKEN`** if you use the LoRa dashboard).
 2. Start the stack:  
    `docker compose up -d`
 3. Open ChirpStack: `http://<host>:8081` (default `admin` / `admin` — change password and API secret for production).
 4. Register gateways and devices (see companion repos for OTAA keys and codecs).
 5. Node-RED: `http://<host>:1880` — use the **LoRaWAN → Influx** flow after edits.
+6. LoRa dashboard: `http://<host>:3000` — details ([`docs/lora-dashboard.md`](docs/lora-dashboard.md)).
 
 ---
 
@@ -69,6 +70,7 @@ Full index, reading order, and diagrams: **[`docs/README.md`](docs/README.md)**
 | [docs/lora-pipeline-explained.md](docs/lora-pipeline-explained.md) | End-to-end uplink path (beginner-friendly) |
 | [docs/related-projects.md](docs/related-projects.md) | **LorBeePlugin**, **Rpi-edge-alert**, central vs edge |
 | [docs/chirpstack.md](docs/chirpstack.md) | ChirpStack services, MQTT, setup |
+| [docs/lora-dashboard.md](docs/lora-dashboard.md) | Live uplinks + downlink UI (port 3000) |
 | [docs/mosquitto.md](docs/mosquitto.md) | Broker |
 | [docs/nodered.md](docs/nodered.md) | Flows and topic contract |
 | [docs/telegraf.md](docs/telegraf.md) | MQTT → Cloud |
@@ -85,7 +87,7 @@ Full index, reading order, and diagrams: **[`docs/README.md`](docs/README.md)**
 |--------|--------|
 | `make up` | `docker compose up -d` |
 | `make down` | `docker compose down` |
-| `make logs` | Tail Telegraf, Node-RED, Mosquitto |
+| `make logs` | Tail Telegraf, Node-RED, Mosquitto, LoRa dashboard |
 
 ---
 
@@ -99,6 +101,7 @@ Default gateway bridge topics use **EU868** (`chirpstack-gateway-bridge/chirpsta
 
 - `mosquitto.conf` allows anonymous MQTT for lab LANs; lock down for production.
 - Rotate ChirpStack **API secret** (`chirpstack/chirpstack.toml`) before exposing 8081/8090 beyond the LAN.
+- **`CHIRPSTACK_API_TOKEN`** (LoRa dashboard) is a separate ChirpStack API key — minimal scope, keep it out of git.
 - Never commit **`.env`** or **`nodered/data/flows_cred.json`**.
 
 ---

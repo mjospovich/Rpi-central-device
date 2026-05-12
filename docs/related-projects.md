@@ -1,6 +1,6 @@
 # Related edge projects
 
-**Rpi-central-device** (this repo) is the **central LoRaWAN side**: ChirpStack (network server + gateway bridge), MQTT, Node-RED shaping, and Telegraf → **InfluxDB Cloud**. Field devices and companion stacks live in separate repos; they **join through your LoRa gateway** and are **managed in ChirpStack on this host**.
+**Rpi-central-device** (this repo) is the **central LoRaWAN side**: ChirpStack (network server + gateway bridge), MQTT, optional **LoRa dashboard** (live feed + downlinks), Node-RED shaping, and Telegraf → **InfluxDB Cloud**. Field devices and companion stacks live in separate repos; they **join through your LoRa gateway** and are **managed in ChirpStack on this host**.
 
 | Project | Role | How it ties to this stack |
 |--------|------|---------------------------|

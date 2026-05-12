@@ -1,6 +1,6 @@
 # Documentation hub
 
-All docs for **Rpi-central-device**: LoRaWAN network server (ChirpStack), MQTT (Mosquitto), Node-RED, Telegraf, and **InfluxDB Cloud**.
+All docs for **Rpi-central-device**: LoRaWAN network server (ChirpStack), MQTT (Mosquitto), Node-RED, optional **LoRa dashboard**, Telegraf, and **InfluxDB Cloud**.
 
 **Start here:** [LoRa pipeline explained](lora-pipeline-explained.md) if you are new to the uplink path, then skim service docs as needed.
 
@@ -11,16 +11,17 @@ All docs for **Rpi-central-device**: LoRaWAN network server (ChirpStack), MQTT (
 ## Recommended reading order
 
 1. [LoRa pipeline explained](lora-pipeline-explained.md) — sensor → gateway → ChirpStack → MQTT → Influx  
-2. [ChirpStack](chirpstack.md) — UI, applications, MQTT integration, example codec (DL-IAM)  
-3. [Mosquitto](mosquitto.md) — broker topics and debugging  
-4. [Node-RED](nodered.md) — how uplinks become `nodered/lorawan/...`  
-5. [Telegraf](telegraf.md) + [InfluxDB Cloud](influxdb.md) — env vars and writes  
-6. [Grafana](grafana.md) — optional dashboards  
+2. [LoRa dashboard](lora-dashboard.md) — live MQTT + downlinks (optional; needs `CHIRPSTACK_API_TOKEN`)  
+3. [ChirpStack](chirpstack.md) — UI, applications, MQTT integration, example codec (DL-IAM)  
+4. [Mosquitto](mosquitto.md) — broker topics and debugging  
+5. [Node-RED](nodered.md) — how uplinks become `nodered/lorawan/...`  
+6. [Telegraf](telegraf.md) + [InfluxDB Cloud](influxdb.md) — env vars and writes  
+7. [Grafana](grafana.md) — optional dashboards  
 
 Operational / hardware-specific guides:
 
-7. [Gateway setup (Laird RG1xx)](gateway-setup-laird-rg1xx.md) — Semtech forwarder → UDP 1700  
-8. [Sensor payload byte budget](sensor-payload-byte-budget.md) — *optional* deep dive on compact binary payloads (useful when designing codecs)
+8. [Gateway setup (Laird RG1xx)](gateway-setup-laird-rg1xx.md) — Semtech forwarder → UDP 1700  
+9. [Sensor payload byte budget](sensor-payload-byte-budget.md) — *optional* deep dive on compact binary payloads (useful when designing codecs)
 
 ---
 
@@ -33,6 +34,7 @@ Operational / hardware-specific guides:
 | [Node-RED](nodered.md) | Flow file, ChirpStack → Telegraf topic contract |
 | [Telegraf](telegraf.md) | MQTT inputs, `influxdb_v2` output |
 | [InfluxDB Cloud](influxdb.md) | `INFLUX_*` variables, Cloud-only (no local Influx container) |
+| [LoRa dashboard](lora-dashboard.md) | Flask UI on **:3000** — MQTT uplinks, LorBee / DL-IAM downlinks |
 | [Grafana](grafana.md) | Flux data source against the same Cloud org |
 
 ---
@@ -42,6 +44,7 @@ Operational / hardware-specific guides:
 | Document | What it covers |
 |----------|----------------|
 | [LoRa pipeline explained](lora-pipeline-explained.md) | Step-by-step narrative for newcomers |
+| [LoRa dashboard](lora-dashboard.md) | Edge control UI — setup, API, downlink families |
 | [Gateway setup (Laird RG1xx)](gateway-setup-laird-rg1xx.md) | Example gateway configuration |
 | [Sensor payload byte budget](sensor-payload-byte-budget.md) | Byte-level payload planning (LoRa-oriented) |
 | [Related projects](related-projects.md) | **LorBeePlugin**, **Rpi-edge-alert**, and how they talk to this central device |
@@ -73,4 +76,5 @@ ChirpStack publishes decoded frames to `application/<app_id>/device/<dev_eui>/ev
 | `http://<host>:8090` | ChirpStack REST API |
 | `http://<host>:1880` | Node-RED editor |
 | `https://<your-cloud-region>...` | InfluxDB Cloud (`INFLUX_URL` in `.env`) |
+| `http://<host>:3000` | LoRa dashboard |
 | `mqtt://<host>:1883` | Mosquitto |

@@ -4,6 +4,10 @@
 # Mosquitto runtime
 mosquitto/data/
 
+# LoRa dashboard — local dev overrides (Docker uses named volume /data)
+lora-dashboard/device_downlink_overrides.json
+lora-dashboard/device_downlink_overrides.json.tmp
+
 # Node-RED credentials and editor backups (never commit secrets)
 nodered/data/flows_cred.json
 nodered/data/*.backup

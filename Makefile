@@ -7,4 +7,4 @@ down:
 	docker compose down
 
 logs:
-	docker compose logs -f telegraf nodered mosquitto
+	docker compose logs -f telegraf nodered mosquitto lora-dashboard

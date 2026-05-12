@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LorBee Edge Control</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #232733;
+      --border: #2d3140;
+      --text: #e0e2ea;
+      --text-dim: #8b8fa3;
+      --accent: #5b8def;
+      --accent-hover: #4a7de0;
+      --green: #4ade80;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --radius: 8px;
+      --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    header h1 span {
+      color: var(--accent);
+    }
+
+    .header-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-dim);
+      background: var(--surface2);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-left {
+      flex: 1;
+      border-right: 1px solid var(--border);
+    }
+
+    .panel-right {
+      width: 420px;
+      min-width: 360px;
+    }
+
+    .panel-header {
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .feed-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-end;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .feed-toolbar .form-group {
+      flex: 1;
+      min-width: 120px;
+      margin: 0;
+    }
+
+    .feed-toolbar label {
+      font-size: 10px;
+    }
+
+    .feed-toolbar input[type="text"],
+    .feed-toolbar select {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-sm {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-sm:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-sm.danger:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .chk-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-dim);
+      padding-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    .chk-row input {
+      accent-color: var(--accent);
+    }
+
+    .device-stats-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      background: var(--bg);
+      min-height: 52px;
+      align-items: stretch;
+    }
+
+    .device-chip {
+      flex: 0 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 11px;
+      min-width: 160px;
+      max-width: 240px;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .device-chip:active {
+      cursor: grabbing;
+    }
+
+    .device-chip.dragging {
+      opacity: 0.55;
+      cursor: grabbing;
+    }
+
+    .device-chip.drag-over {
+      outline: 2px dashed var(--accent);
+      outline-offset: 2px;
+    }
+
+    .device-chip .chip-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .device-chip .name {
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1.25;
+    }
+
+    .chip-copy {
+      flex-shrink: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-dim);
+      font-size: 11px;
+      padding: 2px 7px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .chip-copy:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .device-chip .eui {
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 10px;
+      margin-bottom: 4px;
+      word-break: break-all;
+      cursor: help;
+    }
+
+    .device-chip .meta {
+      color: var(--text-dim);
+      line-height: 1.4;
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    /* ---- Uplink Feed ---- */
+    #uplink-feed {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .uplink-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .uplink-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .uplink-time {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+
+    .uplink-device {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .uplink-device-head {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .device-alarm-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .device-alarm-dot.ok {
+      background: var(--green);
+      box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.18);
+    }
+
+    .device-alarm-dot.alarm {
+      background: var(--red);
+      box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.18);
+    }
+
+    .uplink-signal {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .sensor-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 16px;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    .sensor-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .sensor-group.alarm {
+      border-color: var(--border);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .sensor-name {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .sensor-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sensor-status.alarm {
+      color: var(--yellow);
+      border-color: rgba(251, 191, 36, 0.4);
+      background: rgba(251, 191, 36, 0.1);
+    }
+
+    .sensor-status.ok {
+      color: var(--text-dim);
+    }
+
+    .sensor-row span {
+      white-space: nowrap;
+    }
+
+    .sensor-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sensor-item.alarm {
+      color: var(--red);
+      background: rgba(248, 113, 113, 0.12);
+      border: 1px solid rgba(248, 113, 113, 0.28);
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+
+    .sensor-label {
+      color: var(--text-dim);
+    }
+
+    .sensor-value {
+      color: var(--text);
+      font-family: var(--mono);
+    }
+
+    .sensor-label.alarm,
+    .sensor-value.alarm {
+      color: var(--red);
+    }
+
+    .ack-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    .ack-ok {
+      background: rgba(74, 222, 128, 0.15);
+      color: var(--green);
+    }
+
+    .ack-fail {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--red);
+    }
+
+    /* ---- Command Panel ---- */
+    .cmd-form {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+    }
+
+    select,
+    input[type="number"] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    .param-group {
+      display: none;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .param-group.visible {
+      display: flex;
+    }
+
+    .param-group input {
+      width: 100px;
+    }
+
+    .param-group .unit {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .btn-send {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-send:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .cmd-feedback {
+      font-size: 12px;
+      min-height: 18px;
+      padding: 0 2px;
+    }
+
+    .cmd-feedback.error {
+      color: var(--red);
+    }
+
+    .cmd-feedback.ok {
+      color: var(--green);
+    }
+
+    /* ---- Command History ---- */
+    #cmd-history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cmd-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .cmd-card-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .cmd-card-time {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .cmd-card-device {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .cmd-card-name {
+      color: var(--text);
+    }
+
+    .cmd-card-params {
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .status-queued {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--yellow);
+    }
+
+    .status-sent {
+      background: rgba(91, 141, 239, 0.18);
+      color: var(--accent);
+    }
+
+    .status-ack-ok {
+      background: rgba(74, 222, 128, 0.15);
+      color: var(--green);
+    }
+
+    .status-ack-fail {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--red);
+    }
+
+    .status-flushed {
+      background: rgba(139, 143, 163, 0.2);
+      color: var(--text-dim);
+    }
+
+    .cmd-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+
+    .cmd-block-hidden {
+      display: none !important;
+    }
+
+    .queue-panel {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      background: var(--surface2);
+    }
+
+    .queue-panel .hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .queue-list {
+      margin-top: 8px;
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .queue-row {
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .queue-row:last-child {
+      border-bottom: none;
+    }
+
+    /* ---- Footer ---- */
+    footer {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 8px 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+
+    .dot-green {
+      background: var(--green);
+    }
+
+    .dot-red {
+      background: var(--red);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-dim);
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1><span>LorBee</span> Edge Control</h1>
+    <div class="header-badge" id="version-badge">LoRaWAN Dashboard</div>
+  </header>
+
+  <div class="main">
+    <!-- LEFT: Live Uplink Feed -->
+    <div class="panel panel-left">
+      <div class="panel-header">Live Uplink Feed</div>
+      <div class="feed-toolbar">
+        <div class="form-group">
+          <label>Device</label>
+          <select id="filter-device">
+            <option value="">All devices</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Search</label>
+          <input type="text" id="filter-search" placeholder="Name, EUI, sensor text&hellip;">
+        </div>
+        <div class="chk-row">
+          <label><input type="checkbox" id="filter-ack-only"> ACK only</label>
+        </div>
+        <div class="toolbar-actions">
+          <button type="button" class="btn-sm" id="btn-clear-feed" title="Clear server uplink cache">Clear
+            cache</button>
+        </div>
+      </div>
+      <div class="device-stats-bar" id="device-stats-bar"></div>
+      <div id="uplink-feed">
+        <div class="empty-state" id="uplink-empty">Waiting for uplinks&hellip;</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Command Panel + History -->
+    <div class="panel panel-right">
+      <div class="panel-header">Send Command</div>
+      <div class="cmd-form">
+        <div class="cmd-hint" id="cmd-family-hint">Select a device — LorBee edges use custom commands; DL-IAM uses
+          Decentlab factory format.</div>
+        <div class="form-group">
+          <label>Device</label>
+          <select id="device-select">
+            <option value="">-- select device --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Command set</label>
+          <select id="downlink-preference-select" disabled>
+            <option value="auto">Auto (name / env rules)</option>
+            <option value="lorbee">LorBee edge (fPort 10)</option>
+            <option value="decentlab">Decentlab / DL-IAM (factory)</option>
+            <option value="none">No downlink commands</option>
+          </select>
+        </div>
+        <div id="lorbee-cmd-block">
+          <div class="form-group">
+            <label>Command (LorBee)</label>
+            <select id="command-select">
+              <option value="ping">Ping</option>
+              <option value="set_interval">Set Uplink Interval</option>
+              <option value="permit_join">Permit Zigbee Join</option>
+            </select>
+          </div>
+          <div class="param-group" id="param-interval">
+            <input type="number" id="param-interval-val" min="30" max="3600" value="60" placeholder="30–3600">
+            <span class="unit">seconds</span>
+          </div>
+          <div class="param-group" id="param-join">
+            <input type="number" id="param-join-val" min="0" max="254" value="120" placeholder="0–254">
+            <span class="unit">seconds</span>
+          </div>
+        </div>
+        <div id="decentlab-cmd-block" class="cmd-block-hidden">
+          <div class="form-group">
+            <label>Command (Decentlab / DL-IAM)</label>
+            <select id="decentlab-command-select"></select>
+          </div>
+          <div class="form-group">
+            <label>Parameter (decimal)</label>
+            <input type="number" id="decentlab-param-val" value="300" min="0" max="65535">
+          </div>
+          <p class="cmd-hint" style="margin-top:4px;">+ save = persist for future sessions. Encoding matches the <a
+              href="https://decentlab.github.io/decentlab-decoders/downlink-command-encoder.html" target="_blank"
+              rel="noopener">Decentlab encoder</a>.</p>
+        </div>
+        <button class="btn-send" id="btn-send">Send Command</button>
+        <div class="cmd-feedback" id="cmd-feedback"></div>
+      </div>
+
+      <div class="panel-header">Downlink queue</div>
+      <div class="queue-panel">
+        <div class="form-group">
+          <label>Device</label>
+          <select id="queue-device-select">
+            <option value="">-- select device --</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button type="button" class="btn-sm" id="btn-queue-refresh">Refresh queue</button>
+          <button type="button" class="btn-sm danger" id="btn-queue-flush">Flush queue</button>
+        </div>
+        <div class="hint">ChirpStack only exposes flushing the entire queue, not removing a single item.</div>
+        <div class="queue-list" id="queue-list">Select a device and refresh.</div>
+      </div>
+
+      <div class="panel-header">Command History</div>
+      <div id="cmd-history">
+        <div class="empty-state" id="cmd-empty">No commands sent yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span><span class="dot dot-red" id="mqtt-dot"></span> <span id="mqtt-label">Connecting&hellip;</span></span>
+    <span>Devices online: <strong id="device-count">0</strong></span>
+  </footer>
+
+  <script>
+    (function () {
+      const COMMAND_NAMES = { ping: 'Ping', set_interval: 'Set Uplink Interval', permit_join: 'Permit Zigbee Join' };
+      const MAX_HISTORY = 50;
+
+      const uplinkFeed = document.getElementById('uplink-feed');
+      const uplinkEmpty = document.getElementById('uplink-empty');
+      const cmdHistory = document.getElementById('cmd-history');
+      const cmdEmpty = document.getElementById('cmd-empty');
+      const deviceSelect = document.getElementById('device-select');
+      const commandSelect = document.getElementById('command-select');
+      const btnSend = document.getElementById('btn-send');
+      const cmdFeedback = document.getElementById('cmd-feedback');
+      const mqttDot = document.getElementById('mqtt-dot');
+      const mqttLabel = document.getElementById('mqtt-label');
+      const deviceCount = document.getElementById('device-count');
+      const paramInterval = document.getElementById('param-interval');
+      const paramJoin = document.getElementById('param-join');
+      const lorbeeCmdBlock = document.getElementById('lorbee-cmd-block');
+      const decentlabCmdBlock = document.getElementById('decentlab-cmd-block');
+      const decentlabCommandSelect = document.getElementById('decentlab-command-select');
+      const decentlabParamVal = document.getElementById('decentlab-param-val');
+      const cmdFamilyHint = document.getElementById('cmd-family-hint');
+      const filterDevice = document.getElementById('filter-device');
+      const filterSearch = document.getElementById('filter-search');
+      const filterAckOnly = document.getElementById('filter-ack-only');
+      const btnClearFeed = document.getElementById('btn-clear-feed');
+      const deviceStatsBar = document.getElementById('device-stats-bar');
+      const queueDeviceSelect = document.getElementById('queue-device-select');
+      const queueList = document.getElementById('queue-list');
+      const btnQueueRefresh = document.getElementById('btn-queue-refresh');
+      const btnQueueFlush = document.getElementById('btn-queue-flush');
+      const downlinkPreferenceSelect = document.getElementById('downlink-preference-select');
+
+      const FIELD_ALIASES = {
+        temperature: ['temperature_c'],
+        temperature_c: ['temperature'],
+        humidity: ['humidity_pct'],
+        humidity_pct: ['humidity'],
+        pm2_5: ['pm2_5_ugm3'],
+        pm2_5_ugm3: ['pm2_5'],
+        pm10: ['pm10_ugm3'],
+        pm10_ugm3: ['pm10'],
+        pm1_0: ['pm1_0_ugm3'],
+        pm1_0_ugm3: ['pm1_0'],
+      };
+
+      const knownDevices = new Map();
+      const uplinkBySeq = new Map();
+
+      function normalizeDeveui(s) {
+        if (!s) return '';
+        return String(s).trim().toLowerCase().replace(/[-:\s]/g, '');
+      }
+
+      /** Show enough hex to tell devices apart when names collide (LoRaWAN = 16 hex chars). */
+      function formatDeveuiShort(eui) {
+        var n = normalizeDeveui(eui);
+        if (n.length >= 16) return n.slice(0, 4) + '…' + n.slice(-4);
+        if (n.length > 8) return n.slice(0, 2) + '…' + n.slice(-4);
+        return n || '—';
+      }
+
+      function dedupeSelectOptions(selectEl, canonical) {
+        for (var i = selectEl.options.length - 1; i >= 0; i--) {
+          var o = selectEl.options[i];
+          if (!o.value) continue;
+          if (normalizeDeveui(o.value) === canonical && o.value !== canonical) {
+            selectEl.remove(i);
+          }
+        }
+      }
+
+      function ensureFilterOption(devEui, name) {
+        var norm = normalizeDeveui(devEui);
+        if (!norm) return;
+        dedupeSelectOptions(filterDevice, norm);
+        dedupeSelectOptions(queueDeviceSelect, norm);
+        var shortEui = formatDeveuiShort(norm);
+        var label = (name || norm) + ' · ' + shortEui;
+        if (!filterDevice.querySelector('option[value="' + norm + '"]')) {
+          var o = document.createElement('option');
+          o.value = norm;
+          o.textContent = label;
+          filterDevice.appendChild(o);
+        }
+        if (!queueDeviceSelect.querySelector('option[value="' + norm + '"]')) {
+          var o2 = document.createElement('option');
+          o2.value = norm;
+          o2.textContent = label;
+          queueDeviceSelect.appendChild(o2);
+        }
+      }
+
+      function mergeUplink(data) {
+        if (data.seq == null) return;
+        data.devEui = normalizeDeveui(data.devEui);
+        uplinkBySeq.set(data.seq, data);
+        ensureFilterOption(data.devEui, data.deviceName);
+      }
+
+      function uplinkHaystack(row) {
+        try {
+          return (
+            (row.deviceName || '') +
+            (row.devEui || '') +
+            JSON.stringify(row.sensors || {}) +
+            (row.ack ? JSON.stringify(row.ack) : '')
+          ).toLowerCase();
+        } catch {
+          return '';
+        }
+      }
+
+      function passFilters(row) {
+        var fd = normalizeDeveui(filterDevice.value);
+        if (fd && normalizeDeveui(row.devEui) !== fd) return false;
+        if (filterAckOnly.checked && !row.ack) return false;
+        const q = (filterSearch.value || '').trim().toLowerCase();
+        if (q && !uplinkHaystack(row).includes(q)) return false;
+        return true;
+      }
+
+      function buildCardHtml(data) {
+        const ts = formatTime(data.time);
+        const sensors = data.sensors || {};
+        const hasDeviceAlarm = collectAlarmItems(sensors).length > 0;
+        const dotCls = hasDeviceAlarm ? 'device-alarm-dot alarm' : 'device-alarm-dot ok';
+        const dotTitle = hasDeviceAlarm ? 'Alarm active' : 'No alarm';
+
+        let html = '<div class="uplink-header">' +
+          '<span class="uplink-device-head"><span class="' + dotCls + '" title="' + esc(dotTitle) + '"></span><span class="uplink-device">' + esc(data.deviceName) + '</span></span>' +
+          '<span class="uplink-signal">RSSI: ' + (data.rssi ?? '—') + ' &nbsp; SNR: ' + (data.snr ?? '—') + '</span>' +
+          '</div>' +
+          '<div class="uplink-time">' + ts + '</div>';
+
+        const sensorKeys = Object.keys(sensors);
+        if (sensorKeys.length > 0) {
+          html += '<div class="sensor-row">';
+          for (const key of sensorKeys) {
+            const entry = sensors[key];
+            if (typeof entry === 'object' && entry !== null) {
+              html += renderSensorEntry(key, entry);
+            } else {
+              html += '<span class="sensor-item"><span class="sensor-label">' + esc(key) + ':</span> <span class="sensor-value">' +
+                esc(String(entry)) + '</span></span>';
+            }
+          }
+          html += '</div>';
+        } else if (data.rawPayloadLen != null || data.fPort != null) {
+          var hint = 'No decoded fields in ChirpStack <code>object</code> (device profile / codec).';
+          if (data.rawPayloadLen != null) {
+            hint += ' Application payload: ' + data.rawPayloadLen + ' B.';
+          }
+          if (data.fPort != null) {
+            hint += ' fPort ' + data.fPort + '.';
+          }
+          html += '<div class="sensor-row" style="opacity:0.9;font-size:12px;line-height:1.45;">' + hint + '</div>';
+        }
+
+        if (data.ack) {
+          const ok = data.ack.success;
+          const cid = Number(data.ack.cmd_id);
+          const cmdName = { 1: 'Ping', 2: 'SetInterval', 3: 'PermitJoin' }[cid] || ('cmd=' + data.ack.cmd_id);
+          html += '<div class="ack-badge ' + (ok ? 'ack-ok' : 'ack-fail') + '">ACK: ' + esc(cmdName) + ' ' + (ok ? '✓' : '✗') + '</div>';
+        }
+
+        return html;
+      }
+
+      function renderUplinkFeed() {
+        while (uplinkFeed.firstChild) uplinkFeed.removeChild(uplinkFeed.firstChild);
+
+        const rows = Array.from(uplinkBySeq.values()).sort((a, b) => (b.seq || 0) - (a.seq || 0));
+        const filtered = rows.filter(passFilters);
+
+        if (filtered.length === 0) {
+          const el = document.createElement('div');
+          el.className = 'empty-state';
+          el.id = 'uplink-empty';
+          el.textContent = rows.length === 0 ? 'Waiting for uplinks…' : 'No uplinks match filters.';
+          uplinkFeed.appendChild(el);
+          return;
+        }
+
+        for (const data of filtered) {
+          const card = document.createElement('div');
+          card.className = 'uplink-card';
+          card.dataset.seq = String(data.seq);
+          card.innerHTML = buildCardHtml(data);
+          uplinkFeed.appendChild(card);
+        }
+      }
+
+      function handleUplink(data) {
+        mergeUplink(data);
+        registerDevice(data.devEui, data.deviceName, data.downlinkFamily, data.downlinkPreference);
+        renderUplinkFeed();
+        updateDeviceCount();
+        refreshDeviceStatsSoon();
+      }
+
+      function renderSensorEntry(key, entry) {
+        const type = entry.sensor_type || key;
+        const parts = [];
+        const alarmFields = extractAlarmFields(entry);
+        const hasAlarm = alarmFields.size > 0;
+
+        function pushField(label, fieldKey, value) {
+          if (value == null) return;
+          const alarm = isAlarmField(alarmFields, fieldKey);
+          parts.push(renderFieldSpan(label, value, alarm));
+        }
+
+        if (type === 'climate' || type.startsWith('climate')) {
+          const t = entry.temperature != null ? entry.temperature : entry.temperature_c;
+          const h = entry.humidity != null ? entry.humidity : entry.humidity_pct;
+          if (t != null) pushField('temp', 'temperature_c', t + '°C');
+          if (h != null) pushField('hum', 'humidity_pct', h + '%');
+        } else if (type === 'motion' || type.startsWith('motion')) {
+          if (entry.occupancy != null) pushField('motion', 'occupancy', entry.occupancy ? 'ON' : 'off');
+          if (entry.illumination != null && entry.illumination !== '') {
+            pushField('light', 'illumination', entry.illumination);
+          }
+        } else if (type === 'air_quality' || type.startsWith('air_quality')) {
+          if (entry.aqi != null) pushField('aqi', 'aqi', entry.aqi);
+          if (entry.pm2_5_ugm3 != null) pushField('pm2.5', 'pm2_5_ugm3', entry.pm2_5_ugm3 + ' µg/m³');
+          if (entry.pm10_ugm3 != null) pushField('pm10', 'pm10_ugm3', entry.pm10_ugm3 + ' µg/m³');
+          if (entry.pm4_0_ugm3 != null) pushField('pm4.0', 'pm4_0_ugm3', entry.pm4_0_ugm3 + ' µg/m³');
+          if (entry.pm1_0_ugm3 != null) pushField('pm1.0', 'pm1_0_ugm3', entry.pm1_0_ugm3 + ' µg/m³');
+        } else {
+          for (const k of Object.keys(entry)) {
+            if (k === 'entry_id' || k === 'sensor_type' || k === 'alarm_fields') continue;
+            pushField(k, k, entry[k]);
+          }
+        }
+
+        const title = esc(String(key));
+        const statusCls = hasAlarm ? 'sensor-status alarm' : 'sensor-status ok';
+        const statusText = hasAlarm ? 'Alarm' : 'No alarm';
+        const content = parts.length ? parts.join('') : '<span class="sensor-item"><span class="sensor-label">no fields</span></span>';
+        return '<span class="sensor-group"><span class="sensor-name">' + title + '</span><span class="' + statusCls + '">' + statusText + '</span>' + content + '</span>';
+      }
+      function renderFieldSpan(label, value, alarm) {
+        const cls = alarm ? 'sensor-item alarm' : 'sensor-item';
+        const lcls = alarm ? 'sensor-label alarm' : 'sensor-label';
+        const vcls = alarm ? 'sensor-value alarm' : 'sensor-value';
+        return '<span class="' + cls + '"><span class="' + lcls + '">' + esc(label) + ':</span> <span class="' + vcls + '">' + esc(String(value)) + '</span></span>';
+      }
+
+      function normalizeFieldName(s) {
+        return String(s || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      }
+
+      function aliasNames(fieldName) {
+        const n = normalizeFieldName(fieldName);
+        const out = new Set([n]);
+        const aliases = FIELD_ALIASES[n] || [];
+        aliases.forEach(function (a) { out.add(normalizeFieldName(a)); });
+        return out;
+      }
+
+      function extractAlarmFields(entry) {
+        const out = new Set();
+        if (!entry || typeof entry !== 'object') return out;
+        const raw = entry.alarm_fields;
+        let vals = [];
+
+        if (Array.isArray(raw)) {
+          vals = raw;
+        } else if (raw && typeof raw === 'object') {
+          vals = Object.keys(raw)
+            .sort(function (a, b) { return Number(a) - Number(b); })
+            .map(function (k) { return raw[k]; });
+        } else if (raw != null) {
+          vals = [raw];
+        }
+
+        vals.forEach(function (f) {
+          aliasNames(f).forEach(function (n) { out.add(n); });
+        });
+
+        return out;
+      }
+
+      function isAlarmField(alarmFields, fieldName) {
+        if (!alarmFields || alarmFields.size === 0) return false;
+        for (const n of aliasNames(fieldName)) {
+          if (alarmFields.has(n)) return true;
+        }
+        return false;
+      }
+
+      function findEntryField(entry, fieldName) {
+        if (!entry || typeof entry !== 'object') return null;
+        const wanted = normalizeFieldName(fieldName);
+        for (const k of Object.keys(entry)) {
+          if (normalizeFieldName(k) === wanted) {
+            return { key: k, value: entry[k] };
+          }
+        }
+        for (const alias of aliasNames(fieldName)) {
+          for (const k of Object.keys(entry)) {
+            if (normalizeFieldName(k) === alias) {
+              return { key: k, value: entry[k] };
+            }
+          }
+        }
+        return null;
+      }
+
+      function collectAlarmItems(sensors) {
+        const out = [];
+        const maxItems = 16;
+        for (const sensorKey of Object.keys(sensors || {})) {
+          const entry = sensors[sensorKey];
+          if (!entry || typeof entry !== 'object') continue;
+          const alarmFields = extractAlarmFields(entry);
+          if (!alarmFields.size) continue;
+
+          for (const af of alarmFields) {
+            if (!af) continue;
+            const matched = findEntryField(entry, af);
+            const value = matched ? matched.value : null;
+            out.push({
+              sensor: sensorKey,
+              field: matched ? matched.key : af,
+              value: value == null ? null : String(value),
+            });
+            if (out.length >= maxItems) return out;
+          }
+        }
+        return out;
+      }
+
+      let statsTimer = null;
+      var dragChipEui = null;
+      var CHIP_ORDER_KEY = 'loraDashboardDeviceChipOrder';
+
+      function refreshDeviceStatsSoon() {
+        if (statsTimer) clearTimeout(statsTimer);
+        statsTimer = setTimeout(loadDeviceStats, 400);
+      }
+
+      function findChipByEui(eui) {
+        var nodes = deviceStatsBar.querySelectorAll('.device-chip[data-dev-eui]');
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].dataset.devEui === eui) return nodes[i];
+        }
+        return null;
+      }
+
+      function persistChipOrder() {
+        var euids = [];
+        deviceStatsBar.querySelectorAll('.device-chip[data-dev-eui]').forEach(function (c) {
+          euids.push(c.dataset.devEui);
+        });
+        try {
+          localStorage.setItem(CHIP_ORDER_KEY, JSON.stringify(euids));
+        } catch (e) { }
+      }
+
+      function sortDevicesForChips(list) {
+        var order = [];
+        try {
+          order = JSON.parse(localStorage.getItem(CHIP_ORDER_KEY) || '[]');
+        } catch (e) { }
+        if (!Array.isArray(order) || order.length === 0) {
+          return list.slice().sort(function (a, b) {
+            return (a.name || a.devEui).toLowerCase().localeCompare((b.name || b.devEui).toLowerCase());
+          });
+        }
+        var byEui = {};
+        list.forEach(function (d) {
+          byEui[normalizeDeveui(d.devEui)] = d;
+        });
+        var out = [];
+        order.forEach(function (eui) {
+          var n = normalizeDeveui(eui);
+          if (byEui[n]) {
+            out.push(byEui[n]);
+            delete byEui[n];
+          }
+        });
+        var rest = Object.keys(byEui).map(function (k) { return byEui[k]; });
+        rest.sort(function (a, b) {
+          return (a.name || a.devEui).toLowerCase().localeCompare((b.name || b.devEui).toLowerCase());
+        });
+        return out.concat(rest);
+      }
+
+      function wireDeviceStatsBarDnDOnce() {
+        if (deviceStatsBar._dndWired) return;
+        deviceStatsBar._dndWired = true;
+        deviceStatsBar.addEventListener('dragover', function (e) {
+          if (!dragChipEui) return;
+          e.preventDefault();
+        });
+        deviceStatsBar.addEventListener('drop', function (e) {
+          if (!dragChipEui) return;
+          if (e.target.closest && e.target.closest('.device-chip')) return;
+          e.preventDefault();
+          var src = findChipByEui(dragChipEui);
+          if (src) {
+            deviceStatsBar.appendChild(src);
+            persistChipOrder();
+          }
+        });
+      }
+
+      function wireDeviceChip(chip, fullEui) {
+        chip.draggable = true;
+        chip.dataset.devEui = fullEui;
+        var short = formatDeveuiShort(fullEui);
+        chip.title = 'DevEUI: ' + fullEui + '\nDrag card to reorder. ⧉ copies EUI.';
+
+        chip.addEventListener('dragstart', function (e) {
+          if (e.target && e.target.closest && e.target.closest('.chip-copy')) {
+            e.preventDefault();
+            return;
+          }
+          dragChipEui = fullEui;
+          e.dataTransfer.setData('text/plain', fullEui);
+          e.dataTransfer.effectAllowed = 'move';
+          chip.classList.add('dragging');
+        });
+        chip.addEventListener('dragend', function () {
+          dragChipEui = null;
+          deviceStatsBar.querySelectorAll('.device-chip').forEach(function (c) {
+            c.classList.remove('dragging');
+            c.classList.remove('drag-over');
+            delete c.dataset.dropSide;
+          });
+        });
+        chip.addEventListener('dragover', function (e) {
+          if (!dragChipEui || dragChipEui === fullEui) return;
+          e.preventDefault();
+          e.stopPropagation();
+          var rect = chip.getBoundingClientRect();
+          if (e.clientX < rect.left + rect.width / 2) {
+            chip.dataset.dropSide = 'before';
+          } else {
+            chip.dataset.dropSide = 'after';
+          }
+          chip.classList.add('drag-over');
+        });
+        chip.addEventListener('dragleave', function (e) {
+          if (!chip.contains(e.relatedTarget)) {
+            chip.classList.remove('drag-over');
+            delete chip.dataset.dropSide;
+          }
+        });
+        chip.addEventListener('drop', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          chip.classList.remove('drag-over');
+          var src = findChipByEui(dragChipEui);
+          var side = chip.dataset.dropSide || 'before';
+          delete chip.dataset.dropSide;
+          if (!src || src === chip) return;
+          if (side === 'before') deviceStatsBar.insertBefore(src, chip);
+          else deviceStatsBar.insertBefore(src, chip.nextSibling);
+          persistChipOrder();
+        });
+
+        var btn = chip.querySelector('.chip-copy');
+        if (btn) {
+          btn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(fullEui).then(function () {
+                showFeedback('Copied ' + short, false);
+              }).catch(function () {
+                showFeedback('Copy failed', true);
+              });
+            } else {
+              showFeedback('Clipboard not available', true);
+            }
+          });
+        }
+      }
+
+      async function loadDeviceStats() {
+        try {
+          wireDeviceStatsBarDnDOnce();
+          const r = await fetch('/api/device-stats');
+          const list = await r.json();
+          const sorted = sortDevicesForChips(list);
+          deviceStatsBar.innerHTML = '';
+          for (var i = 0; i < sorted.length; i++) {
+            var d = sorted[i];
+            const chip = document.createElement('div');
+            chip.className = 'device-chip';
+            var fullEui = normalizeDeveui(d.devEui);
+            var avg = d.avgIntervalSec != null ? ('~' + d.avgIntervalSec + 's avg') : 'avg: —';
+            var nextT = d.nextUplinkEst ? formatTime(d.nextUplinkEst) : '—';
+            var on = d.online ? '●' : '○';
+            var euiShort = formatDeveuiShort(fullEui);
+            chip.innerHTML =
+              '<div class="chip-head">' +
+              '<div class="name">' + esc(d.name || d.devEui) + ' <span style="opacity:0.7">' + on + '</span></div>' +
+              '<button type="button" class="chip-copy" title="Copy DevEUI">⧉</button></div>' +
+              '<div class="eui" title="' + esc(fullEui) + '">' + esc(euiShort) + '</div>' +
+              '<div class="meta">' + esc(avg) + '<br>Next est: ' + esc(nextT) + '</div>';
+            wireDeviceChip(chip, fullEui);
+            deviceStatsBar.appendChild(chip);
+          }
+          if (sorted.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.style.padding = '12px';
+            empty.textContent = 'No devices yet.';
+            deviceStatsBar.appendChild(empty);
+          }
+        } catch (e) {
+          deviceStatsBar.textContent = '';
+        }
+      }
+
+      function connectSSE() {
+        const source = new EventSource('/events');
+
+        source.addEventListener('uplink', function (e) {
+          handleUplink(JSON.parse(e.data));
+        });
+
+        source.addEventListener('uplink_cache_cleared', function () {
+          uplinkBySeq.clear();
+          renderUplinkFeed();
+          loadDeviceStats();
+        });
+
+        source.addEventListener('cmd_update', function (e) {
+          handleCmdUpdate(JSON.parse(e.data));
+        });
+
+        source.addEventListener('mqtt_status', function (e) {
+          setMqttStatus(JSON.parse(e.data).connected);
+        });
+
+        source.addEventListener('open', function () { setMqttStatus(true); });
+        source.addEventListener('error', function () {
+          setMqttStatus(false);
+          source.close();
+          setTimeout(connectSSE, 3000);
+        });
+      }
+
+      function setMqttStatus(connected) {
+        mqttDot.className = connected ? 'dot dot-green' : 'dot dot-red';
+        mqttLabel.textContent = connected ? 'Connected to MQTT' : 'Disconnected';
+      }
+
+      function registerDevice(devEui, name, downlinkFamily, downlinkPreference) {
+        var norm = normalizeDeveui(devEui);
+        if (!norm) return;
+        ensureFilterOption(norm, name);
+        dedupeSelectOptions(deviceSelect, norm);
+
+        if (downlinkFamily === undefined) {
+          if (!knownDevices.has(norm)) {
+            knownDevices.set(norm, { name: name, lastSeen: Date.now() });
+          } else {
+            var k0 = knownDevices.get(norm);
+            k0.lastSeen = Date.now();
+            if (name) k0.name = name;
+          }
+          return;
+        }
+
+        if (downlinkFamily === 'none') {
+          var rm = deviceSelect.querySelector('option[value="' + norm + '"]');
+          if (rm) rm.remove();
+          if (!knownDevices.has(norm)) {
+            knownDevices.set(norm, { name: name, lastSeen: Date.now() });
+          } else {
+            var k1 = knownDevices.get(norm);
+            k1.lastSeen = Date.now();
+            if (name) k1.name = name;
+          }
+          return;
+        }
+
+        var opt = deviceSelect.querySelector('option[value="' + norm + '"]');
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = norm;
+          deviceSelect.appendChild(opt);
+          knownDevices.set(norm, { name: name, lastSeen: Date.now() });
+        } else {
+          if (!knownDevices.has(norm)) {
+            knownDevices.set(norm, { name: name, lastSeen: Date.now() });
+          } else {
+            var kd = knownDevices.get(norm);
+            kd.lastSeen = Date.now();
+            if (name) kd.name = name;
+          }
+        }
+        opt.textContent = (name || norm) + ' · ' + formatDeveuiShort(norm);
+        opt.dataset.downlink = downlinkFamily;
+        opt.dataset.preference = downlinkPreference && downlinkPreference !== '' ? downlinkPreference : 'auto';
+      }
+
+      function syncDownlinkPreferenceFromDevice() {
+        var opt = deviceSelect.selectedOptions[0];
+        if (!opt || !opt.value) {
+          downlinkPreferenceSelect.disabled = true;
+          downlinkPreferenceSelect.value = 'auto';
+          return;
+        }
+        downlinkPreferenceSelect.disabled = false;
+        var p = opt.dataset.preference || 'auto';
+        if (p !== 'auto' && p !== 'lorbee' && p !== 'decentlab' && p !== 'none') p = 'auto';
+        downlinkPreferenceSelect.value = p;
+      }
+
+      async function refreshCommandDevicesFromApi() {
+        try {
+          const devResp = await fetch('/api/devices');
+          var devices = await devResp.json();
+          var keep = deviceSelect.value;
+          while (deviceSelect.options.length > 1) {
+            deviceSelect.remove(1);
+          }
+          devices.forEach(function (d) {
+            registerDevice(d.devEui, d.name, d.downlinkFamily, d.downlinkPreference);
+          });
+          if (keep && deviceSelect.querySelector('option[value="' + keep + '"]')) {
+            deviceSelect.value = keep;
+          } else {
+            deviceSelect.value = '';
+          }
+          syncDownlinkPreferenceFromDevice();
+          syncCmdPanels();
+        } catch (e) { }
+      }
+
+      function syncCmdPanels() {
+        var opt = deviceSelect.selectedOptions[0];
+        if (!opt || !opt.value) {
+          lorbeeCmdBlock.classList.remove('cmd-block-hidden');
+          decentlabCmdBlock.classList.add('cmd-block-hidden');
+          cmdFamilyHint.textContent = 'Select a device — choose Command set (Auto uses device name / env rules).';
+          return;
+        }
+        var fam = opt.dataset.downlink || 'lorbee';
+        var pref = opt.dataset.preference || 'auto';
+        if (fam === 'decentlab') {
+          lorbeeCmdBlock.classList.add('cmd-block-hidden');
+          decentlabCmdBlock.classList.remove('cmd-block-hidden');
+          cmdFamilyHint.textContent = pref === 'auto'
+            ? 'Decentlab / DL-IAM — factory downlink (auto-detected). Override with Command set if needed.'
+            : 'Decentlab / DL-IAM — factory downlink (manual command set).';
+        } else {
+          lorbeeCmdBlock.classList.remove('cmd-block-hidden');
+          decentlabCmdBlock.classList.add('cmd-block-hidden');
+          cmdFamilyHint.textContent = pref === 'auto'
+            ? 'LorBee edge — custom commands on fPort 10 (auto-detected).'
+            : 'LorBee edge — custom commands on fPort 10 (manual command set).';
+        }
+        updateDecentlabParamBounds();
+      }
+
+      function updateDecentlabParamBounds() {
+        var o = decentlabCommandSelect.selectedOptions[0];
+        if (!o) return;
+        var mn = parseInt(o.dataset.pmin, 10);
+        var mx = parseInt(o.dataset.pmax, 10);
+        decentlabParamVal.min = String(mn);
+        decentlabParamVal.max = String(mx);
+        var v = parseInt(decentlabParamVal.value, 10);
+        if (isNaN(v) || v < mn) decentlabParamVal.value = String(mn);
+        if (!isNaN(v) && v > mx) decentlabParamVal.value = String(mx);
+      }
+
+      function updateDeviceCount() {
+        const cutoff = Date.now() - 600000;
+        var count = 0;
+        knownDevices.forEach(function (info) {
+          if (info.lastSeen > cutoff) count++;
+        });
+        deviceCount.textContent = count;
+      }
+
+      filterDevice.addEventListener('change', renderUplinkFeed);
+      filterAckOnly.addEventListener('change', renderUplinkFeed);
+      filterSearch.addEventListener('input', function () {
+        if (filterSearch._t) clearTimeout(filterSearch._t);
+        filterSearch._t = setTimeout(renderUplinkFeed, 200);
+      });
+
+      btnClearFeed.addEventListener('click', async function () {
+        if (!confirm('Clear uplink cache on the server? (All connected browsers will reset the feed.)')) return;
+        try {
+          const r = await fetch('/api/uplinks', { method: 'DELETE' });
+          if (!r.ok) throw new Error();
+          uplinkBySeq.clear();
+          renderUplinkFeed();
+          loadDeviceStats();
+        } catch {
+          alert('Failed to clear cache');
+        }
+      });
+
+      commandSelect.addEventListener('change', function () {
+        paramInterval.className = commandSelect.value === 'set_interval' ? 'param-group visible' : 'param-group';
+        paramJoin.className = commandSelect.value === 'permit_join' ? 'param-group visible' : 'param-group';
+      });
+
+      deviceSelect.addEventListener('change', function () {
+        syncDownlinkPreferenceFromDevice();
+        syncCmdPanels();
+      });
+
+      downlinkPreferenceSelect.addEventListener('change', async function () {
+        var dev = deviceSelect.value;
+        if (!dev) return;
+        var fam = downlinkPreferenceSelect.value;
+        downlinkPreferenceSelect.disabled = true;
+        try {
+          const r = await fetch('/api/device-downlink-preference', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ devEui: dev, family: fam }),
+          });
+          const j = await r.json();
+          if (!r.ok) {
+            showFeedback(j.error || 'Save failed', true);
+            syncDownlinkPreferenceFromDevice();
+            return;
+          }
+          await refreshCommandDevicesFromApi();
+          showFeedback('Command set saved', false);
+        } catch (e) {
+          showFeedback('Save failed', true);
+          syncDownlinkPreferenceFromDevice();
+        } finally {
+          downlinkPreferenceSelect.disabled = !deviceSelect.value;
+        }
+      });
+      decentlabCommandSelect.addEventListener('change', updateDecentlabParamBounds);
+
+      btnSend.addEventListener('click', async function () {
+        const devEui = deviceSelect.value;
+        if (!devEui) { showFeedback('Select a device first', true); return; }
+
+        var opt = deviceSelect.selectedOptions[0];
+        var fam = opt && opt.dataset.downlink ? opt.dataset.downlink : 'lorbee';
+
+        btnSend.disabled = true;
+        cmdFeedback.textContent = '';
+
+        var body;
+        if (fam === 'decentlab') {
+          body = {
+            devEui: devEui,
+            opcode: decentlabCommandSelect.value,
+            param: parseInt(decentlabParamVal.value, 10),
+          };
+        } else {
+          const command = commandSelect.value;
+          const params = {};
+          if (command === 'set_interval') params.seconds = document.getElementById('param-interval-val').value;
+          if (command === 'permit_join') params.seconds = document.getElementById('param-join-val').value;
+          body = { devEui: devEui, command: command, params: params };
+        }
+
+        try {
+          const resp = await fetch('/api/command', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await resp.json();
+          if (!resp.ok) showFeedback(data.error || 'Failed', true);
+          else showFeedback(fam === 'decentlab' ? 'Downlink queued (Decentlab)' : 'Command queued', false);
+        } catch (err) {
+          showFeedback('Network error', true);
+        } finally {
+          btnSend.disabled = false;
+        }
+      });
+
+      function showFeedback(msg, isError) {
+        cmdFeedback.textContent = msg;
+        cmdFeedback.className = isError ? 'cmd-feedback error' : 'cmd-feedback ok';
+        setTimeout(function () { cmdFeedback.textContent = ''; }, 4000);
+      }
+
+      function handleCmdUpdate(data) {
+        if (cmdEmpty) cmdEmpty.remove();
+
+        const existing = document.getElementById('cmd-' + data.id);
+        if (existing) {
+          const badge = existing.querySelector('.status-badge');
+          if (badge) {
+            badge.className = 'status-badge ' + statusClass(data.status);
+            badge.textContent = data.status;
+          }
+          return;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'cmd-card';
+        card.id = 'cmd-' + data.id;
+
+        const ts = formatTime(data.time);
+        var cmdName = data.cmdDisplay || COMMAND_NAMES[data.command] || data.command;
+        var paramStr = '';
+        if (data.params && data.params.seconds) paramStr = '(' + data.params.seconds + 's)';
+        if (data.params && (data.params.param != null || data.params.opcode)) {
+          paramStr = '(' + (data.params.opcode || '') + ' p=' + data.params.param + ')';
+        }
+
+        card.innerHTML =
+          '<div class="cmd-card-header">' +
+          '<span class="cmd-card-device">' + esc(data.deviceName || data.devEui) + '</span>' +
+          '<span class="cmd-card-time">' + ts + '</span>' +
+          '</div>' +
+          '<div class="cmd-card-name">' + esc(cmdName) + ' ' + esc(paramStr) + '</div>' +
+          '<div class="status-badge ' + statusClass(data.status) + '">' + esc(data.status) + '</div>';
+
+        cmdHistory.prepend(card);
+
+        while (cmdHistory.children.length > MAX_HISTORY) {
+          cmdHistory.removeChild(cmdHistory.lastElementChild);
+        }
+      }
+
+      function statusClass(status) {
+        if (status === 'ACK OK') return 'status-ack-ok';
+        if (status === 'ACK FAIL') return 'status-ack-fail';
+        if (status === 'Flushed') return 'status-flushed';
+        if (status === 'Sent') return 'status-sent';
+        return 'status-queued';
+      }
+
+      function formatTime(isoStr) {
+        try {
+          const d = new Date(isoStr);
+          return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        } catch (e) { return isoStr; }
+      }
+
+      function esc(str) {
+        const el = document.createElement('span');
+        el.textContent = str == null ? '' : String(str);
+        return el.innerHTML;
+      }
+
+      function queueItemsFromResponse(j) {
+        if (j.result) return j.result;
+        if (j.queueItems) return j.queueItems;
+        return [];
+      }
+
+      btnQueueRefresh.addEventListener('click', async function () {
+        const dev = queueDeviceSelect.value;
+        if (!dev) {
+          queueList.textContent = 'Select a device.';
+          return;
+        }
+        queueList.textContent = 'Loading…';
+        try {
+          const r = await fetch('/api/queue/' + encodeURIComponent(dev));
+          const j = await r.json();
+          if (!r.ok) {
+            queueList.textContent = j.error || 'Error';
+            return;
+          }
+          const items = queueItemsFromResponse(j);
+          if (items.length === 0) {
+            queueList.textContent = 'Queue is empty.';
+            return;
+          }
+          queueList.innerHTML = items.map(function (it) {
+            const id = it.id || it.queueItemId || '—';
+            const fp = it.fPort != null ? it.fPort : (it.f_port != null ? it.f_port : '—');
+            const pend = it.isPending || it.is_pending ? 'pending' : 'queued';
+            return '<div class="queue-row">id ' + esc(String(id).slice(0, 8)) + '… fPort ' + fp + ' · ' + pend + '</div>';
+          }).join('');
+        } catch (e) {
+          queueList.textContent = 'Request failed';
+        }
+      });
+
+      btnQueueFlush.addEventListener('click', async function () {
+        const dev = queueDeviceSelect.value;
+        if (!dev) {
+          alert('Select a device.');
+          return;
+        }
+        if (!confirm('Flush entire downlink queue for this device?')) return;
+        try {
+          const r = await fetch('/api/queue/' + encodeURIComponent(dev), { method: 'DELETE' });
+          const j = await r.json();
+          if (!r.ok) {
+            alert(j.error || 'Flush failed');
+            return;
+          }
+          queueList.textContent = 'Queue flushed.';
+        } catch (e) {
+          alert('Flush failed');
+        }
+      });
+
+      async function init() {
+        try {
+          const up = await fetch('/api/uplinks?limit=500');
+          const body = await up.json();
+          (body.items || []).forEach(function (row) {
+            mergeUplink(row);
+            registerDevice(row.devEui, row.deviceName, row.downlinkFamily, row.downlinkPreference);
+          });
+          renderUplinkFeed();
+        } catch (e) { }
+
+        try {
+          const devResp = await fetch('/api/devices');
+          const devices = await devResp.json();
+          devices.forEach(function (d) { registerDevice(d.devEui, d.name, d.downlinkFamily, d.downlinkPreference); });
+        } catch (e) { }
+
+        try {
+          const r = await fetch('/api/decentlab/commands');
+          const cmds = await r.json();
+          decentlabCommandSelect.innerHTML = '';
+          cmds.forEach(function (c) {
+            var o = document.createElement('option');
+            o.value = c.opcode;
+            o.textContent = c.name + (c.save ? ' (+ save)' : '');
+            o.dataset.pmin = c.param_min;
+            o.dataset.pmax = c.param_max;
+            decentlabCommandSelect.appendChild(o);
+          });
+          updateDecentlabParamBounds();
+        } catch (e) { }
+
+        try {
+          const histResp = await fetch('/api/command/history');
+          const history = await histResp.json();
+          history.forEach(function (cmd) { handleCmdUpdate(cmd); });
+        } catch (e) { }
+
+        loadDeviceStats();
+        setInterval(loadDeviceStats, 20000);
+
+        connectSSE();
+        updateDeviceCount();
+        syncDownlinkPreferenceFromDevice();
+        syncCmdPanels();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+
+</html>
